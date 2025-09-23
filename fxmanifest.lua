@@ -9,13 +9,13 @@ version '1.0.0'
 dependency 'screenshot-basic'
 
 shared_scripts {
-    'object_list.lua', -- put your models here
+    'shared/*.lua', -- put your models here
 }
 
 client_scripts {
-    'client.lua',
+    'client/*.lua',
 }
 
 server_scripts {
-    'server.lua',
+    'server/*.lua',
 }
