@@ -65,30 +65,27 @@ local function pretty_json(s)
     return table.concat(pretty)
 end
 
+local CurrentVehicleDump = {}
+
+RegisterNetEvent('objshot:server:AddVehicleToDump',function(data, isFinished)
+    CurrentVehicleDump[#CurrentVehicleDump+1] = data
+
+    if isFinished then
+        TriggerEvent('objshot:server:SaveAllVehiclesJSON')
+    end
+end)
+
 RegisterNetEvent('objshot:server:SaveAllVehiclesJSON', function(payload)
-    local jsonTbl = json.encode(payload)
-    -- payload is a JSON string where keys are model names
-    if type(jsonTbl) ~= "string" or #jsonTbl == 0 then
-        print("^1SaveAllVehiclesJSON: invalid payload^0")
-        return
-    end
-
-    local ok, decoded = pcall(json.decode, jsonTbl)
-    if not ok or type(decoded) ~= "table" then
-        print("^1SaveAllVehiclesJSON: failed to decode JSON^0")
-        return
-    end
-
     -- Convert to an array and sort by .model (alphabetical, case-insensitive)
     local arr = {}
-    for _, v in pairs(decoded) do
+    for _, v in pairs(CurrentVehicleDump) do
         if type(v) == "table" then
             table.insert(arr, v)
         end
     end
     table.sort(arr, function(a, b)
-        local am = (a.model or ""):lower()
-        local bm = (b.model or ""):lower()
+        local am = (a.Name or ""):lower()
+        local bm = (b.Name or ""):lower()
         return am < bm
     end)
 

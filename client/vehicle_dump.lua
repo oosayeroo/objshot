@@ -302,6 +302,7 @@ function ProcessVehicleData()
     local vehicleTable = GetAllVehicleModels()  -- array of model names
     local resultsByModel = {}
     local finished = 0
+    local vehAmount = #vehicleTable
     print("Started creating FULL vehicle data dump")
 
     for _, modelName in ipairs(vehicleTable) do
@@ -433,8 +434,8 @@ function ProcessVehicleData()
                 data.HasSirens = DoesVehicleHaveSiren and DoesVehicleHaveSiren(veh) or false
 
                 -- Model dimensions & derived bounds
-                local minV = vector3(0.0,0.0,0.0)
-                local maxV = vector3(0.0,0.0,0.0)
+                local minV = {x=0.0,y=0.0,z=0.0}
+                local maxV = {x=0.0,y=0.0,z=0.0}
                 local okDims = GetModelDimensions(hash, minV, maxV)
                 if okDims then
                     data.DimensionsMin = {X=minV.x, Y=minV.y, Z=minV.z}
@@ -500,17 +501,25 @@ function ProcessVehicleData()
             data.LayoutId = "UNKNOWN"
         end
 
-        -- store under model key so we can alphabetize on the server
-        resultsByModel[modelName] = data
+        -- send each vehicle to server to log there instead of sending a bulk amount
+        -- new vehAmount is #vehicleTable
         finished = finished + 1
-        print(("Vehicle: [%s] Full dump logged"):format(tostring(modelName)))
+        local isFinished = false
+        if finished >= vehAmount then
+            isFinished = true
+        end
+        TriggerServerEvent('objshot:server:AddVehicleToDump', data, isFinished)
+        resultsByModel[modelName] = data
+        print(("Vehicle: [%d] [%s] Full dump logged"):format(finished, tostring(modelName)))
 
         Wait(50) -- tweak if needed
     end
 
     print(("Completed %d vehicles (full dump)"):format(finished))
 
-    TriggerServerEvent('objshot:server:SaveAllVehiclesJSON', resultsByModel)
+    -- local payload = json.encode(resultsByModel)
+
+    -- TriggerServerEvent('objshot:server:SaveAllVehiclesJSON', payload)
 end
 
 RegisterCommand('getallvehicleData', function()
